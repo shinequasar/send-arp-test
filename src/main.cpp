@@ -2,9 +2,7 @@
 
 #define REQ_CNT 20
 
-void convrt_mac( const char *data, char *cvrt_str, int sz );
-// MAC address를 보기 좋게 변환하는 함수
-void myMac(char* uc_Mac,char* dev); // 내 MAC 주소를 변수에 넣어주는 함수
+void myMac(char* mymac,char* dev); // 내 MAC 주소를 변수에 넣어주는 함수
 void myIp(char* ip_buffer, char* iface_name); //내 ip받아오는 함수
 
 #pragma pack(push, 1)
@@ -13,7 +11,7 @@ struct EthArpPacket {
 	ArpHdr arp_;
 };
 #pragma pack(pop)
-char mac_adr[18]= {0x00,}; //Attacker의 mac 주소 전역변수
+char mac_adr[1024]= {0x00,}; //Attacker의 mac 주소 전역변수
 char smac_adr[128] = {0x00,}; //sender의 mac 주소 전역변수
 char my_Ip[128] = {0x00,};//myIp 전역변수
 char senderMac[6] = {0x00,};//senderMac 전역변수
@@ -42,7 +40,7 @@ int main(int argc, char* argv[]) {
 
     if (handle == nullptr || handle_rq == nullptr) {
 		fprintf(stderr, "couldn't open device %s(%s)\n", dev, errbuf);
-		return -1;
+        return -1;
 	}
 
 	EthArpPacket packet;
@@ -75,10 +73,6 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "pcap_sendpacket return %d error=%s\n", res_rq, pcap_geterr(handle_rq));
     }
     pcap_close(handle_rq);
-
-
-
-
 
 
 
@@ -129,48 +123,22 @@ int main(int argc, char* argv[]) {
 }
 
 
-
-
-void myMac(char* uc_Mac,char* dev) {
+void myMac(char* mymac,char* dev) {
   int fd;
-
   struct ifreq ifr;
   char* mac;
 
   fd = socket(AF_INET, SOCK_DGRAM, 0);
-
   ifr.ifr_addr.sa_family = AF_INET;
   strncpy((char*)ifr.ifr_name, (const char*)dev, IFNAMSIZ - 1);
 
   ioctl(fd, SIOCGIFHWADDR, &ifr);
-
   close(fd);
 
   mac = (char*)ifr.ifr_hwaddr.sa_data;
-
-  sprintf((char*)uc_Mac, (const char*)"%02x:%02x:%02x:%02x:%02x:%02x",
+  sprintf((char*)mymac, (const char*)"%02x:%02x:%02x:%02x:%02x:%02x",
           mac[0] & 0xff, mac[1] & 0xff, mac[2] & 0xff, mac[3] & 0xff,
           mac[4] & 0xff, mac[5] & 0xff);
-}
-
-void convrt_mac( const char *data, char *cvrt_str, int sz )
-{
-     char buf[128] = {0x00,};
-     char t_buf[8];
-     char *stp = strtok( (char *)data , ":" );
-     int temp=0;
-
-     do
-     {
-          memset( t_buf, 0x0, sizeof(t_buf) );
-          sscanf( stp, "%x", &temp );
-          snprintf( t_buf, sizeof(t_buf)-1, "%02X", temp );
-          strncat( buf, t_buf, sizeof(buf)-1 );
-          strncat( buf, ":", sizeof(buf)-1 );
-     } while( (stp = strtok( NULL , ":" )) != NULL );
-
-     buf[strlen(buf) -1] = '\0';
-     strncpy( cvrt_str, buf, sz );
 }
 
 void myIp(char* ip_buffer, char* iface_name){
@@ -178,12 +146,9 @@ void myIp(char* ip_buffer, char* iface_name){
     struct ifreq ifr;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
-
     ifr.ifr_addr.sa_family = AF_INET;
     strncpy(ifr.ifr_name, iface_name, IFNAMSIZ -1);
-
     ioctl(fd, SIOCGIFADDR, &ifr);
     close(fd);
-
     sprintf(ip_buffer, "%s", inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr));
 }
